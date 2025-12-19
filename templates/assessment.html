@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Disease Risk Assessment - Assessment</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2>❤️ Heart Health</h2>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/">Home</a></li>
+                <li><a href="/#about">About</a></li>
+                <li><a href="/assessment" class="active">Assessment</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Assessment Section -->
+    <section class="assessment-section">
+        <div class="container">
+            <h1 class="page-title">Heart Disease Risk Assessment</h1>
+            <p class="page-subtitle">Please provide your health information below</p>
+
+            <form id="assessmentForm" class="assessment-form">
+                <div class="form-grid">
+                    <!-- Age -->
+                    <div class="form-group">
+                        <label for="Age">Age (years)</label>
+                        <input type="number" id="Age" name="Age" min="0" max="120" required>
+                    </div>
+
+                    <!-- Sex -->
+                    <div class="form-group">
+                        <label for="Sex">Sex</label>
+                        <select id="Sex" name="Sex" required>
+                            <option value="">Select...</option>
+                            <option value="M">Male</option>
+                            <option value="F">Female</option>
+                        </select>
+                    </div>
+
+                    <!-- ChestPainType -->
+                    <div class="form-group">
+                        <label for="ChestPainType">Chest Pain Type</label>
+                        <select id="ChestPainType" name="ChestPainType" required>
+                            <option value="">Select...</option>
+                            <option value="TA">Typical Angina</option>
+                            <option value="ATA">Atypical Angina</option>
+                            <option value="NAP">Non-Anginal Pain</option>
+                            <option value="ASY">Asymptomatic</option>
+                        </select>
+                    </div>
+
+                    <!-- RestingBP -->
+                    <div class="form-group">
+                        <label for="RestingBP">Resting Blood Pressure (mm Hg)</label>
+                        <input type="number" id="RestingBP" name="RestingBP" min="0" max="300" required>
+                    </div>
+
+                    <!-- Cholesterol -->
+                    <div class="form-group">
+                        <label for="Cholesterol">Cholesterol (mg/dl)</label>
+                        <input type="number" id="Cholesterol" name="Cholesterol" min="0" max="700" required>
+                    </div>
+
+                    <!-- FastingBS -->
+                    <div class="form-group">
+                        <label for="FastingBS">Fasting Blood Sugar > 120 mg/dl</label>
+                        <select id="FastingBS" name="FastingBS" required>
+                            <option value="">Select...</option>
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select>
+                    </div>
+
+                    <!-- RestingECG -->
+                    <div class="form-group">
+                        <label for="RestingECG">Resting ECG</label>
+                        <select id="RestingECG" name="RestingECG" required>
+                            <option value="">Select...</option>
+                            <option value="Normal">Normal</option>
+                            <option value="ST">ST-T Wave Abnormality</option>
+                            <option value="LVH">Left Ventricular Hypertrophy</option>
+                        </select>
+                    </div>
+
+                    <!-- MaxHR -->
+                    <div class="form-group">
+                        <label for="MaxHR">Maximum Heart Rate (bpm)</label>
+                        <input type="number" id="MaxHR" name="MaxHR" min="0" max="250" required>
+                    </div>
+
+                    <!-- ExerciseAngina -->
+                    <div class="form-group">
+                        <label for="ExerciseAngina">Exercise-Induced Angina</label>
+                        <select id="ExerciseAngina" name="ExerciseAngina" required>
+                            <option value="">Select...</option>
+                            <option value="N">No</option>
+                            <option value="Y">Yes</option>
+                        </select>
+                    </div>
+
+                    <!-- Oldpeak -->
+                    <div class="form-group">
+                        <label for="Oldpeak">ST Depression (Oldpeak)</label>
+                        <input type="number" id="Oldpeak" name="Oldpeak" step="0.1" min="0" max="10" required>
+                    </div>
+
+                    <!-- ST_Slope -->
+                    <div class="form-group">
+                        <label for="ST_Slope">ST Slope</label>
+                        <select id="ST_Slope" name="ST_Slope" required>
+                            <option value="">Select...</option>
+                            <option value="Up">Up</option>
+                            <option value="Flat">Flat</option>
+                            <option value="Down">Down</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="submit-button">Assess Risk</button>
+                    <button type="reset" class="reset-button">Reset Form</button>
+                </div>
+            </form>
+
+            <!-- Results Section -->
+            <div id="results" class="results-container" style="display: none;">
+                <h2 class="results-title">Assessment Results</h2>
+                <div id="resultsContent" class="results-content"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Heart Disease Risk Assessment. Built with Flask & Machine Learning.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('assessmentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {};
+            
+            // Convert form data to object
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+            
+            // Show loading state
+            const submitButton = document.querySelector('.submit-button');
+            const originalText = submitButton.textContent;
+            submitButton.textContent = 'Assessing...';
+            submitButton.disabled = true;
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Display results
+                    const resultsDiv = document.getElementById('results');
+                    const resultsContent = document.getElementById('resultsContent');
+                    
+                    const riskLevel = result.prediction === 1 ? 'high' : 'low';
+                    const riskIcon = result.prediction === 1 ? '⚠️' : '✅';
+                    const riskColor = result.prediction === 1 ? '#e74c3c' : '#27ae60';
+                    
+                    resultsContent.innerHTML = `
+                        <div class="result-card ${riskLevel}">
+                            <div class="result-icon" style="color: ${riskColor}">${riskIcon}</div>
+                            <h3 class="result-label">${result.prediction_label}</h3>
+                            <div class="result-probability">
+                                <span class="probability-label">Risk Probability:</span>
+                                <span class="probability-value" style="color: ${riskColor}">${result.risk_probability}%</span>
+                            </div>
+                            <div class="result-message">${result.message}</div>
+                            <div class="result-note">
+                                <p><strong>Note:</strong> This assessment is for informational purposes only and should not replace professional medical advice. Please consult with a healthcare provider for accurate diagnosis and treatment.</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    resultsDiv.style.display = 'block';
+                    resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    alert('Error: ' + (result.error || 'Failed to assess risk'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
+

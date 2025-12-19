@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Disease Risk Assessment</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2>❤️ Heart Health</h2>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="/assessment">Assessment</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1 class="hero-title">Heart Disease Risk Assessment</h1>
+            <p class="hero-subtitle">Take control of your heart health with our AI-powered risk assessment tool</p>
+            <p class="hero-description">Enter your health metrics and get an instant risk assessment powered by machine learning</p>
+            <a href="/assessment" class="cta-button">Start Assessment</a>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="container">
+            <h2 class="section-title">About Heart Disease Risk Assessment</h2>
+            <div class="about-content">
+                <div class="about-card">
+                    <div class="card-icon">🔬</div>
+                    <h3>AI-Powered Analysis</h3>
+                    <p>Our advanced machine learning model analyzes multiple health factors to assess your heart disease risk.</p>
+                </div>
+                <div class="about-card">
+                    <div class="card-icon">⚡</div>
+                    <h3>Instant Results</h3>
+                    <p>Get your risk assessment in seconds. No waiting, no appointments needed.</p>
+                </div>
+                <div class="about-card">
+                    <div class="card-icon">🔒</div>
+                    <h3>Privacy First</h3>
+                    <p>Your health data is processed securely and never stored on our servers.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Heart Disease Risk Assessment. Built with Flask & Machine Learning.</p>
+        </div>
+    </footer>
+</body>
+</html>
+
