@@ -6,9 +6,7 @@ import pandas as pd
 
 app = Flask(__name__)
 
-# Load model and metadata
-MODEL_PATH = 'models/heart_disease_model.pkl'
-METADATA_PATH = 'models/model_metadata.pkl'
+
 
 model = None
 metadata = None
@@ -20,7 +18,40 @@ def load_model():
         if os.path.exists(MODEL_PATH):
             with open(MODEL_PATH, 'rb') as f:
                 model = pickle.load(f)
-        
+            # Compatibility fix: older pickled sklearn estimators may be missing
+            # the `monotonic_cst` attribute when unpickled with newer sklearn.
+            # Add the attribute where missing to avoid attribute errors during
+            # prediction (see InconsistentVersionWarning / attribute errors).
+            try:
+                from sklearn.base import BaseEstimator
+                from sklearn.tree import DecisionTreeClassifier
+
+                def _fix_monotonic_attr(obj):
+                    if isinstance(obj, DecisionTreeClassifier):
+                        if not hasattr(obj, 'monotonic_cst'):
+                            obj.monotonic_cst = None
+
+                    # Recurse into nested estimators (pipelines, forests, etc.)
+                    if isinstance(obj, BaseEstimator):
+                        for attr_name in dir(obj):
+                            # skip private and callables to reduce noise
+                            if attr_name.startswith('__'):
+                                continue
+                            try:
+                                attr = getattr(obj, attr_name)
+                            except Exception:
+                                continue
+                            if isinstance(attr, BaseEstimator):
+                                _fix_monotonic_attr(attr)
+                            elif isinstance(attr, (list, tuple)):
+                                for item in attr:
+                                    _fix_monotonic_attr(item)
+
+                _fix_monotonic_attr(model)
+            except Exception:
+                # If sklearn isn't available or something goes wrong, ignore
+                # the compatibility fix and let prediction surface errors.
+                pass
         if os.path.exists(METADATA_PATH):
             with open(METADATA_PATH, 'rb') as f:
                 metadata = pickle.load(f)
@@ -171,31 +202,45 @@ def predict():
         # Make prediction
         prediction = model.predict(input_df)[0]
         prediction_proba = model.predict_proba(input_df)[0]
-        
-        # In this dataset: 0 = Heart Disease, 1 = No Heart Disease
-        # So we need to reverse the interpretation
-        # Decode prediction if target encoder exists
+
+        # Determine human-readable label (explicit mapping: 0 = Heart Disease)
+        decoded_label = None
         target_encoder = metadata.get('target_encoder')
         if target_encoder:
-            prediction_label = target_encoder.inverse_transform([prediction])[0]
-            # If encoder gives us the original label, use it; otherwise reverse
-            if prediction == 0:
-                prediction_label = 'Heart Disease'
-            else:
-                prediction_label = 'No Heart Disease'
+            try:
+                decoded_label = target_encoder.inverse_transform([prediction])[0]
+            except Exception:
+                decoded_label = None
+
+        if decoded_label is None:
+            # In this dataset `1` indicates presence of heart disease.
+            prediction_label = 'Heart Disease' if int(prediction) == 1 else 'No Heart Disease'
         else:
-            # Reverse the interpretation: 0 = Heart Disease, 1 = No Heart Disease
-            prediction_label = 'Heart Disease' if prediction == 0 else 'No Heart Disease'
-        
-        # Get probability of heart disease (class 0)
-        # prediction_proba[0] is probability of class 0 (Heart Disease)
-        # prediction_proba[1] is probability of class 1 (No Heart Disease)
-        risk_probability = float(prediction_proba[0])  # Probability of Heart Disease (class 0)
-        
+            prediction_label = str(decoded_label)
+
+        # Normalize predict_proba in case of numeric instability (sum should be 1)
+        proba_arr = np.asarray(prediction_proba, dtype=float)
+        proba_sum = float(np.sum(proba_arr))
+        if proba_sum <= 0:
+            normalized = proba_arr
+        else:
+            normalized = proba_arr / proba_sum
+
+        # Find index corresponding to the heart-disease class (prefer `1` if present)
+        cls_idx = 0
+        if hasattr(model, 'classes_'):
+            try:
+                if 1 in list(model.classes_):
+                    cls_idx = list(model.classes_).index(1)
+                else:
+                    cls_idx = list(model.classes_).index(0)
+            except ValueError:
+                cls_idx = 0
+
+        risk_probability = float(normalized[cls_idx])
+
         # Return prediction as 1 for Heart Disease, 0 for No Heart Disease (from user perspective)
-        # Model: 0 = Heart Disease, 1 = No Heart Disease
-        # User view: 1 = Heart Disease (High Risk), 0 = No Heart Disease (Low Risk)
-        user_prediction = 1 if prediction == 0 else 0
+        user_prediction = 1 if int(prediction) == 1 else 0
         
         return jsonify({
             'prediction': user_prediction,  # 1 = Heart Disease, 0 = No Heart Disease
