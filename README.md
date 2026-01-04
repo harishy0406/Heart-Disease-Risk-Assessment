@@ -1,6 +1,4 @@
-# Heart Disease Risk Assessment
 
-A web application that uses machine learning to assess the risk of heart disease based on user-provided health metrics to help asessement of their health.
 
 ## 🎯 Project Overview
 
